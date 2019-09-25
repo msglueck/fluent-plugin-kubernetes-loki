@@ -71,14 +71,3 @@ You can generate configuration template:
 ```
 $ fluent-plugin-config-format output kubernetes-loki
 ```
-
-You can copy and paste generated documents here.
-
-## Copyright
-
-* Copyright(c) 2019- Banzai Cloud
-* License
-  * Apache License, Version 2.0
-
-
-
