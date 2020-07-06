@@ -18,6 +18,7 @@ require 'net/http'
 require 'uri'
 require 'yajl'
 require 'time'
+require 'openssl'
 
 module Fluent
   module Plugin
@@ -47,7 +48,21 @@ module Fluent
       # format to use when flattening the record to a log line
       config_param :line_format, :enum, list: %i[json key_value], default: :key_value
 
+      # Set Net::HTTP.verify_mode to `OpenSSL::SSL::VERIFY_NONE`
+      config_param :ssl_no_verify, :bool, :default => false
 
+      # ca file to use for https request
+      config_param :cacert_file, :string, :default => ''
+
+      # specify client sertificate
+      config_param :client_cert_path, :string, :default => ''
+
+      # specify private key path
+      config_param :private_key_path, :string, :default => ''
+
+      # specify private key passphrase
+      config_param :private_key_passphrase, :string, :default => '', :secret => true
+      
       config_section :buffer do
         config_set_default :@type, DEFAULT_BUFFER_TYPE
         config_set_default :chunk_keys, []
@@ -57,6 +72,13 @@ module Fluent
         compat_parameters_convert(conf, :buffer)
         super
 
+        @ssl_verify_mode = if @ssl_no_verify
+                              OpenSSL::SSL::VERIFY_NONE
+                           else
+                              OpenSSL::SSL::VERIFY_PEER
+                           end
+        @ca_file = @cacert_file
+        
         @label_keys = @label_keys.split(/\s*,\s*/) if @label_keys
       end
 
@@ -64,6 +86,11 @@ module Fluent
         opts = {
             use_ssl: uri.scheme == 'https'
         }
+        
+        opts[:verify_mode] = @ssl_verify_mode if opts[:use_ssl]
+        opts[:ca_file] = File.join(@ca_file) if File.file?(@ca_file)
+        opts[:cert] = OpenSSL::X509::Certificate.new(File.read(@client_cert_path)) if File.file?(@client_cert_path)
+        opts[:key] = OpenSSL::PKey.read(File.read(@private_key_path), @private_key_passphrase) if File.file?(@private_key_path)
         opts
       end
 
