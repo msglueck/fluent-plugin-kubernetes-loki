@@ -19,6 +19,13 @@ In your Fluentd configuration, use `@type loki`. Additional configuration is opt
   username "#{ENV['LOKI_USERNAME']}"
   password "#{ENV['LOKI_PASSWORD']}"
   extra_labels {"env":"dev"}
+  
+  ssl_no_verify   false  # default: false
+  cacert_file     /etc/ssl/endpoint1.cert # default: ''
+  client_cert_path /path/to/client_cert.crt # default: ''
+  private_key_path /path/to/private_key.key # default: ''
+  private_key_passphrase yourpassphrase # default: ''
+  
   <buffer>
     flush_interval 10s
     chunk_limit_size 1m
